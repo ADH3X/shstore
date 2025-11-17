@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>SH STORE</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+<header class="main-header">
+  <!-- TOPBAR -->
+  <div class="container topbar">
+    <!-- Marca / logo -->
+    <a href="{{ url_for('public.home') }}" class="brand">
+      <img src="{{ url_for('static', filename='img/logo/shstore-logo.png') }}"
+           alt="SH STORE"
+           class="brand-logo">
+      <span class="brand-text">SH STORE</span>
+    </a>
+
+    <!-- Buscador -->
+    <form class="search-bar" method="get" action="{{ url_for('public.home') }}">
+      <input
+        type="text"
+        name="q"
+        class="search-input"
+        placeholder="Busca artículos..."
+        value="{{ request.args.get('q','') }}"
+      >
+      <button type="submit" class="search-btn">Buscar</button>
+    </form>
+
+    <!-- Acciones derecha -->
+    <div class="topbar-actions">
+      <a href="{{ url_for('admin.dashboard') }}" class="btn-ghost">Admin</a>
+    </div>
+  </div>
+
+  {% set current_cat = request.args.get('category', '') %}
+
+  <!-- BARRA DE CATEGORÍAS (ÚNICO FILTRO GLOBAL) -->
+  <nav class="category-nav">
+    <div class="container category-track">
+
+      <!-- TODO -->
+      <a href="{{ url_for('public.home') }}"
+         class="cat-chip {% if not current_cat %}active{% endif %}">
+        Todo
+      </a>
+
+      <!-- CATEGORÍAS FIJAS (coinciden con CATEGORY_OPTIONS del backend) -->
+      <a href="{{ url_for('public.home', category='zapatillas') }}"
+         class="cat-chip {% if current_cat == 'zapatillas' %}active{% endif %}">
+        Zapatillas
+      </a>
+
+      <a href="{{ url_for('public.home', category='poleras') }}"
+         class="cat-chip {% if current_cat == 'poleras' %}active{% endif %}">
+        Poleras / Remeras
+      </a>
+
+      <a href="{{ url_for('public.home', category='buzos') }}"
+         class="cat-chip {% if current_cat == 'buzos' %}active{% endif %}">
+        Buzos / Hoodies
+      </a>
+
+      <a href="{{ url_for('public.home', category='camperas') }}"
+         class="cat-chip {% if current_cat == 'camperas' %}active{% endif %}">
+        Camperas / Abrigos
+      </a>
+
+      <a href="{{ url_for('public.home', category='camisas') }}"
+         class="cat-chip {% if current_cat == 'camisas' %}active{% endif %}">
+        Camisas
+      </a>
+
+      <a href="{{ url_for('public.home', category='pantalones') }}"
+         class="cat-chip {% if current_cat == 'pantalones' %}active{% endif %}">
+        Pantalones
+      </a>
+
+      <a href="{{ url_for('public.home', category='shorts') }}"
+         class="cat-chip {% if current_cat == 'shorts' %}active{% endif %}">
+        Shorts
+      </a>
+
+      <a href="{{ url_for('public.home', category='conjuntos') }}"
+         class="cat-chip {% if current_cat == 'conjuntos' %}active{% endif %}">
+        Conjuntos
+      </a>
+
+      <a href="{{ url_for('public.home', category='accesorios') }}"
+         class="cat-chip {% if current_cat == 'accesorios' %}active{% endif %}">
+        Accesorios
+      </a>
+
+      <a href="{{ url_for('public.home', category='ropa-interior') }}"
+         class="cat-chip {% if current_cat == 'ropa-interior' %}active{% endif %}">
+        Ropa interior
+      </a>
+
+      <a href="{{ url_for('public.home', category='bolsos') }}"
+         class="cat-chip {% if current_cat == 'bolsos' %}active{% endif %}">
+        Bolsos / Mochilas
+      </a>
+
+      <a href="{{ url_for('public.home', category='outlet') }}"
+         class="cat-chip {% if current_cat == 'outlet' %}active{% endif %}">
+        Outlet
+      </a>
+
+      <a href="{{ url_for('public.home', category='nuevos') }}"
+         class="cat-chip {% if current_cat == 'nuevos' %}active{% endif %}">
+        Nuevos
+      </a>
+
+    </div>
+  </nav>
+</header>
+
+<main class="container content">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="main-footer">
+  <div class="container">
+    SH STORE © Todos los derechos reservados
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

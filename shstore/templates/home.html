@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="page-section page-section--wide home-page">
+
+  <!-- ===================== CABECERA ===================== -->
+  <header class="home-header">
+    <div class="home-header-main">
+      <h1 class="home-title">
+        {% if category_filter %}
+          {# nombre bonito de la categoría actual #}
+          {% for slug, label in category_options %}
+            {% if slug == category_filter %}
+              {{ label }}
+            {% endif %}
+          {% endfor %}
+        {% elif q %}
+          Resultados de búsqueda
+        {% else %}
+          Novedades
+        {% endif %}
+      </h1>
+
+      {% if q or category_filter %}
+        <p class="home-subtitle">
+          Mostrando
+          {% if category_filter %}
+            <strong>
+              {% for slug, label in category_options %}
+                {% if slug == category_filter %}{{ label|lower }}{% endif %}
+              {% endfor %}
+            </strong>
+          {% else %}
+            <strong>todos los productos</strong>
+          {% endif %}
+          {% if q %} que coinciden con “<strong>{{ q }}</strong>”{% endif %}.
+        </p>
+      {% else %}
+        <p class="home-subtitle">
+          Explora las últimas llegadas a SH STORE.
+        </p>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ===================== GRID DE PRODUCTOS ===================== -->
+  {% if products %}
+    <section class="products-grid">
+      {% for product in products %}
+        <article class="product-card">
+          <a href="{{ url_for('public.product_detail', slug=product.slug) }}" class="product-card-link">
+            <div class="product-thumb">
+              {% if product.image_url %}
+                <img
+                  src="{{ url_for('static', filename=product.image_url) }}"
+                  alt="{{ product.name }}"
+                >
+              {% elif product.images %}
+                <img
+                  src="{{ url_for('static', filename=product.images[0].image_url) }}"
+                  alt="{{ product.name }}"
+                >
+              {% else %}
+                <img
+                  src="https://via.placeholder.com/800x800?text=SH+STORE"
+                  alt="{{ product.name }}"
+                >
+              {% endif %}
+            </div>
+
+            <div class="product-info">
+              {% if product.category %}
+                <p class="product-tag">{{ product.category.name|upper }}</p>
+              {% endif %}
+              <h2 class="product-name">{{ product.name }}</h2>
+              <p class="product-price">{{ '%.2f'|format(product.price) }} Bs</p>
+            </div>
+          </a>
+        </article>
+      {% endfor %}
+    </section>
+  {% else %}
+    <p class="empty-state">
+      No hay productos para mostrar en esta combinación de filtros.
+    </p>
+
+    {# ===================== RECOMENDADOS ===================== #}
+    {% if recommended_products %}
+      <section class="recommended-section">
+        <div class="recommended-header">
+          <h2 class="recommended-title">Recomendados para ti</h2>
+          <p class="recommended-subtitle">
+            Otros productos que podrían interesarte.
+          </p>
+        </div>
+
+        <div class="products-grid products-grid--recommended">
+          {% for product in recommended_products %}
+            <article class="product-card">
+              <a href="{{ url_for('public.product_detail', slug=product.slug) }}" class="product-card-link">
+                <div class="product-thumb">
+                  {% if product.image_url %}
+                    <img
+                      src="{{ url_for('static', filename=product.image_url) }}"
+                      alt="{{ product.name }}"
+                    >
+                  {% elif product.images %}
+                    <img
+                      src="{{ url_for('static', filename=product.images[0].image_url) }}"
+                      alt="{{ product.name }}"
+                    >
+                  {% else %}
+                    <img
+                      src="https://via.placeholder.com/800x800?text=SH+STORE"
+                      alt="{{ product.name }}"
+                    >
+                  {% endif %}
+                </div>
+
+                <div class="product-info">
+                  {% if product.category %}
+                    <p class="product-tag">{{ product.category.name|upper }}</p>
+                  {% endif %}
+                  <h2 class="product-name">{{ product.name }}</h2>
+                  <p class="product-price">{{ '%.2f'|format(product.price) }} Bs</p>
+                </div>
+              </a>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% endif %}
+
+</section>
+
+<!-- ===================== ESTILOS LOCALES ===================== -->
+<style>
+  .home-page{
+    padding-top:1.5rem;
+  }
+  .home-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:1rem;
+    margin-bottom:1.5rem;
+  }
+  .home-title{
+    font-size:1.8rem;
+    margin:0;
+  }
+  .home-subtitle{
+    margin:0.3rem 0 0;
+    font-size:0.9rem;
+    opacity:0.8;
+  }
+
+  /* ---------- grid de productos ---------- */
+  .products-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:1.5rem;
+  }
+  .product-card{
+    background:#10141d;
+    border-radius:1.2rem;
+    overflow:hidden;
+    box-shadow:0 10px 25px rgba(0,0,0,0.35);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .product-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 14px 32px rgba(0,0,0,0.5);
+  }
+  .product-card-link{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    text-decoration:none;
+    color:inherit;
+  }
+  .product-thumb{
+    position:relative;
+    padding-top:125%; /* 4:5 */
+    overflow:hidden;
+    background:#05070b;
+  }
+  .product-thumb img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transition:transform .25s ease;
+  }
+  .product-card:hover .product-thumb img{
+    transform:scale(1.03);
+  }
+  .product-info{
+    padding:0.75rem 0.9rem 0.95rem;
+  }
+  .product-tag{
+    margin:0 0 0.15rem;
+    font-size:0.7rem;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    opacity:0.7;
+  }
+  .product-name{
+    font-size:0.95rem;
+    margin:0 0 0.25rem;
+  }
+  .product-price{
+    margin:0;
+    font-weight:600;
+    font-size:0.95rem;
+  }
+
+  .empty-state{
+    margin-top:1.5rem;
+    opacity:0.8;
+  }
+
+  /* ---------- recomendados ---------- */
+  .recommended-section{
+    margin-top:2.5rem;
+    border-top:1px solid rgba(255,255,255,0.05);
+    padding-top:1.7rem;
+  }
+  .recommended-header{
+    display:flex;
+    flex-direction:column;
+    gap:0.25rem;
+    margin-bottom:1.1rem;
+  }
+  .recommended-title{
+    margin:0;
+    font-size:1.3rem;
+  }
+  .recommended-subtitle{
+    margin:0;
+    font-size:0.9rem;
+    opacity:0.7;
+  }
+  .products-grid--recommended{
+    margin-top:0.5rem;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1200px){
+    .products-grid{
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+  }
+  @media (max-width: 900px){
+    .products-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:1.25rem;
+    }
+    .home-title{
+      font-size:1.6rem;
+    }
+  }
+  @media (max-width: 600px){
+    .products-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:1rem;
+    }
+    .home-header{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+    .home-title{
+      font-size:1.45rem;
+    }
+  }
+  @media (max-width: 420px){
+    .products-grid{
+      grid-template-columns:1fr;
+    }
+  }
+</style>
+
+{% endblock %}

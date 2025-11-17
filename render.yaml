@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: shstore
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: shstore-db
+          property: connectionString
+      - key: WHATSAPP_1
+        value: "59170000000"
+      - key: WHATSAPP_2
+        value: "59160000000"
+
+databases:
+  - name: shstore-db
+    plan: free

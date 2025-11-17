@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-header">
+  <h1>Panel de administración</h1>
+  <p class="muted">Desde aquí gestionas los productos de SH STORE.</p>
+</div>
+
+<div class="admin-grid">
+  <div class="admin-card">
+    <h2>Total de productos</h2>
+    <p class="big-number">{{ total_products }}</p>
+    <a href="{{ url_for('admin.products_list') }}" class="btn primary">Ver productos</a>
+  </div>
+</div>
+
+{% endblock %}

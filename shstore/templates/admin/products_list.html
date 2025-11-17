@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+  /* Grid admin de productos (vista tipo cliente) */
+
+  .admin-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-search-form {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex: 1;
+  }
+
+  .admin-search-form input[type="text"] {
+    flex: 1;
+    padding: .55rem .9rem;
+    border-radius: 999px;
+    border: 1px solid #30343f;
+    background: #101318;
+    color: #e8ecf5;
+    outline: none;
+  }
+
+  .admin-search-form button {
+    border-radius: 999px;
+  }
+
+  .admin-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .product-admin-card {
+    background: #11151d;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #252a36;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-admin-main {
+    padding: .85rem .9rem .75rem;
+    display: flex;
+    gap: .75rem;
+  }
+
+  .product-admin-thumb {
+    flex: 0 0 90px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #050608;
+  }
+
+  .product-admin-thumb img {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .product-admin-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .product-admin-name {
+    font-size: .95rem;
+    font-weight: 600;
+    color: #f3f5ff;
+    margin: 0 0 .25rem;
+  }
+
+  .product-admin-price {
+    font-size: .9rem;
+    font-weight: 600;
+    color: #63e6b0;
+    margin: 0 0 .25rem;
+  }
+
+  .product-admin-meta {
+    font-size: .75rem;
+    color: #9aa3b2;
+  }
+
+  .product-admin-meta span + span::before {
+    content: "•";
+    margin: 0 .35rem;
+    opacity: .6;
+  }
+
+  .product-admin-actions {
+    border-top: 1px solid #252a36;
+    padding: .55rem .8rem .65rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+
+  .product-admin-actions-left,
+  .product-admin-actions-right {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-tiny {
+    font-size: .75rem;
+    padding: .3rem .7rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-tiny.view {
+    border-color: #2b8cff;
+    color: #cfe3ff;
+    background: rgba(43, 140, 255, 0.08);
+  }
+
+  .btn-tiny.edit {
+    border-color: #3dd68c;
+    color: #d4ffe9;
+    background: rgba(61, 214, 140, 0.08);
+  }
+
+  .btn-tiny.delete {
+    border-color: #ff6b6b;
+    color: #ffe3e3;
+    background: rgba(255, 107, 107, 0.08);
+  }
+
+  .admin-count {
+    font-size: .8rem;
+    color: #8b95a7;
+  }
+
+  @media (max-width: 640px) {
+    .product-admin-main {
+      padding: .75rem .8rem .6rem;
+    }
+  }
+</style>
+
+<section class="page-section">
+  <div class="admin-header-row">
+    <div>
+      <h1 class="page-title">Productos</h1>
+      <p class="admin-count">
+        {{ products|length }} producto{{ '' if products|length == 1 else 's' }} encontrados
+        {% if q %} para "<strong>{{ q }}</strong>"{% endif %}
+      </p>
+    </div>
+
+    <form class="admin-search-form" method="get" action="{{ url_for('admin.products_list') }}">
+      <input
+        type="text"
+        name="q"
+        placeholder="Buscar por nombre o slug…"
+        value="{{ q or '' }}"
+      >
+      <button type="submit" class="btn primary">Buscar</button>
+    </form>
+
+    <a href="{{ url_for('admin.product_create') }}" class="btn primary">
+      + Nuevo producto
+    </a>
+  </div>
+
+  {% if not products %}
+    <p>No hay productos. Crea el primero.</p>
+  {% else %}
+    <div class="admin-products-grid">
+      {% for product in products %}
+        <article class="product-admin-card">
+
+          <!-- Vista similar a cliente -->
+          <div class="product-admin-main">
+            <a
+              href="{{ url_for('public.product_detail', slug=product.slug) }}"
+              class="product-admin-thumb"
+              target="_blank"
+            >
+              {% if product.image_url %}
+                <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+              {% else %}
+                <img src="{{ url_for('static', filename='img/placeholder-product.png') }}" alt="Sin imagen">
+              {% endif %}
+            </a>
+
+            <div class="product-admin-info">
+              <h2 class="product-admin-name">{{ product.name }}</h2>
+              <p class="product-admin-price">{{ '%.2f'|format(product.price) }} Bs</p>
+              <p class="product-admin-meta">
+                <span>
+                  {% if product.category is not none and product.category.name is defined %}
+                    {{ product.category.name }}
+                  {% else %}
+                    {{ product.category or 'Sin categoría' }}
+                  {% endif %}
+                </span>
+                <span>#{{ product.id }}</span>
+                <span>{{ product.created_at.strftime('%d/%m/%Y') }}</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Acciones admin -->
+          <div class="product-admin-actions">
+            <div class="product-admin-actions-left">
+              <a
+                href="{{ url_for('public.product_detail', slug=product.slug) }}"
+                class="btn-tiny view"
+                target="_blank"
+              >
+                Ver como cliente
+              </a>
+              <a
+                href="{{ url_for('admin.product_edit', product_id=product.id) }}"
+                class="btn-tiny edit"
+              >
+                Editar
+              </a>
+            </div>
+
+            <div class="product-admin-actions-right">
+              <form
+                method="post"
+                action="{{ url_for('admin.product_delete', product_id=product.id) }}"
+               onsubmit="return confirm('¿Seguro que quieres eliminar {{ product.name }}? Esta acción no se puede deshacer.');"
+
+              >
+                <button type="submit" class="btn-tiny delete">
+                  Eliminar
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+{% endblock %}

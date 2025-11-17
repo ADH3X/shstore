@@ -1,0 +1,682 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-section page-section--wide">
+  <h1 class="page-title">
+    {% if product %}Editar producto{% else %}Nuevo producto{% endif %}
+  </h1>
+
+  <div class="admin-layout">
+    <!-- ===================================== -->
+    <!--  COLUMNA 1: FORMULARIO                -->
+    <!-- ===================================== -->
+    <div class="admin-form">
+      <div class="card form-card">
+        <form
+          method="post"
+          enctype="multipart/form-data"
+          action="{% if product %}
+                     {{ url_for('admin.product_edit', product_id=product.id) }}
+                   {% else %}
+                     {{ url_for('admin.product_create') }}
+                   {% endif %}"
+        >
+
+          <div class="form-grid">
+            <!-- Nombre -->
+            <div class="form-group full">
+              <label for="name">Nombre del producto</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                value="{{ product.name if product }}"
+                placeholder="Ej: NIKE AIR JORDAN 1 HIGH OG"
+              >
+            </div>
+
+            <!-- Precio -->
+            <div class="form-group">
+              <label for="price">Precio (Bs)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                id="price"
+                name="price"
+                required
+                value="{% if product %}{{ '%.2f'|format(product.price) }}{% endif %}"
+                placeholder="0.00"
+              >
+              <p class="hint">Solo números, se muestran con dos decimales.</p>
+            </div>
+
+            <!-- Categoría -->
+            <div class="form-group">
+              <label for="category">Categoría</label>
+              <select id="category" name="category" class="select-input">
+                <option value="">Sin categoría</option>
+                {% for value, label  in category_options  %}
+                  <option value="{{ value  }}"
+                    {% if product and product.category and product.category.slug  == value %}
+                      selected
+                    {% endif %}
+                  >
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
+
+              <p class="hint">
+                Se usa para los filtros y navegación de la tienda.
+              </p>
+            </div>
+
+            <!-- Género -->
+            <div class="form-group">
+              <label for="gender">Género</label>
+              <select id="gender" name="gender">
+                <option value="">Sin definir</option>
+                {% for g in gender_options %}
+                  <option value="{{ g }}"
+                    {% if product and product.gender == g %}selected{% endif %}>
+                    {{ g }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Estado / Condición -->
+            <div class="form-group">
+              <label for="condition">Estado</label>
+              <select id="condition" name="condition">
+                <option value="">Sin definir</option>
+                {% for c in condition_options %}
+                  <option value="{{ c }}"
+                    {% if product and product.condition == c %}selected{% endif %}>
+                    {{ c }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Color principal -->
+            <div class="form-group">
+              <label for="color">Color</label>
+              <select id="color" name="color">
+                <option value="">Sin definir</option>
+                {% for col in color_options %}
+                  <option value="{{ col }}"
+                    {% if product and product.color == col %}selected{% endif %}>
+                    {{ col }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Color detallado (texto libre) -->
+            <div class="form-group">
+              <label for="color_detail">Color (detalle)</label>
+              <input
+                type="text"
+                id="color_detail"
+                name="color_detail"
+                value="{{ product.color_detail if product }}"
+                placeholder="Ej: Azul claro / blanco"
+              >
+            </div>
+
+            <!-- Talla ropa -->
+            <div class="form-group">
+              <label for="size_clothes">Talla ropa</label>
+              <select id="size_clothes" name="size_clothes">
+                <option value="">Sin definir</option>
+                {% for s in size_clothes_options %}
+                  <option value="{{ s }}"
+                    {% if product and product.size_clothes == s %}selected{% endif %}>
+                    {{ s }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Talla calzado -->
+            <div class="form-group">
+              <label for="size_shoes">Talla calzado</label>
+              <select id="size_shoes" name="size_shoes">
+                <option value="">Sin definir</option>
+                {% for s in size_shoes_options %}
+                  <option value="{{ s }}"
+                    {% if product and product.size_shoes == s %}selected{% endif %}>
+                    {{ s }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Material -->
+            <div class="form-group">
+              <label for="material">Material</label>
+              <select id="material" name="material">
+                <option value="">Sin definir</option>
+                {% for m in material_options %}
+                  <option value="{{ m }}"
+                    {% if product and product.material == m %}selected{% endif %}>
+                    {{ m }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-group full">
+              <label for="description">Descripción</label>
+              <textarea
+                id="description"
+                name="description"
+                rows="4"
+                placeholder="Detalles del producto, estado, materiales, talles, etc."
+              >{% if product and product.description %}{{ product.description }}{% endif %}</textarea>
+            </div>
+
+            <!-- Imágenes -->
+            <div class="form-group full">
+              <label for="images">Imágenes del producto</label>
+              <input
+                type="file"
+                id="images"
+                name="images"
+                accept="image/*"
+                multiple
+              >
+              <p class="hint">
+                Puedes subir hasta 6 imágenes por producto.
+                La primera se usa como portada en el catálogo.
+              </p>
+
+              <!-- Siempre mostramos el contenedor de imágenes actuales,
+                   y si ya hay en la BD las renderizamos adentro -->
+              <div class="images-current">
+                <p class="subtitle">Imágenes actuales:</p>
+
+                <div class="images-grid" id="current-images">
+                  {% if product and product.images %}
+                    {% for img in product.images %}
+                      {% set img_url = url_for('static', filename=img.image_url) %}
+                      <div class="image-item" data-preview-image="{{ img_url }}">
+                        <div class="thumb-wrapper">
+                          <img
+                            src="{{ img_url }}"
+                            alt="Imagen {{ loop.index }} de {{ product.name }}"
+                          >
+                          <!-- checkbox real que se envía al backend -->
+                          <input
+                            type="checkbox"
+                            class="delete-checkbox"
+                            name="delete_image_ids"
+                            value="{{ img.id }}"
+                            id="delete_{{ img.id }}"
+                          >
+                          <!-- botón visual -->
+                          <button
+                            type="button"
+                            class="delete-btn"
+                            data-target-checkbox="delete_{{ img.id }}"
+                            aria-label="Eliminar imagen"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        {% if product.image_url == img.image_url %}
+                          <small>Portada actual</small>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+
+                <p class="hint">
+                  Haz click en la X para quitar imágenes de la vista.
+                  Las que ya existían se borrarán de la BD cuando guardes cambios.
+                </p>
+              </div>
+            </div>
+
+          </div><!-- /form-grid -->
+
+          <div class="form-actions">
+            <button type="submit" class="btn primary">
+              {% if product %}Guardar cambios{% else %}Crear producto{% endif %}
+            </button>
+
+            <a href="{{ url_for('admin.products_list') }}" class="btn ghost">
+              Volver a la lista
+            </a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- ===================================== -->
+    <!--  COLUMNA 2: VISTA PREVIA CLIENTE      -->
+    <!-- ===================================== -->
+    <div class="preview-column">
+      <h2 class="preview-title">Vista previa (como lo ve el cliente)</h2>
+
+      <article class="preview-card">
+        <!-- Imagen principal con slider -->
+        <div class="preview-main">
+          <button type="button" class="preview-arrow left" id="preview-prev">‹</button>
+
+          <div class="preview-image-wrapper">
+            <img
+              id="preview-main-img"
+              src="{% if product and product.image_url %}
+                     {{ url_for('static', filename=product.image_url) }}
+                   {% elif product and product.images %}
+                     {{ url_for('static', filename=product.images[0].image_url) }}
+                   {% else %}
+                     https://via.placeholder.com/600x800?text=Sin+imagen
+                   {% endif %}"
+              alt="Imagen del producto"
+            >
+          </div>
+
+          <button type="button" class="preview-arrow right" id="preview-next">›</button>
+        </div>
+
+        <div class="preview-body">
+          <p class="preview-category" id="preview-category">
+            {% if product and product.category %}
+              {{ product.category.name|upper }}
+            {% else %}
+              CATEGORÍA
+            {% endif %}
+          </p>
+
+          <h3 class="preview-name" id="preview-name">
+            {{ product.name if product else "Nombre del producto" }}
+          </h3>
+
+          <p class="preview-price" id="preview-price">
+            {% if product %}{{ '%.2f'|format(product.price) }} Bs{% else %}0.00 Bs{% endif %}
+          </p>
+
+          <p class="preview-description" id="preview-description">
+            {% if product and product.description %}
+              {{ product.description }}
+            {% else %}
+              Aquí se verá la descripción del producto.
+            {% endif %}
+          </p>
+
+          <button type="button" class="btn primary btn-full">Comprar</button>
+        </div>
+      </article>
+    </div>
+  </div><!-- /admin-layout -->
+
+
+  <!-- ===================================== -->
+  <!--          ESTILOS LOCALES             -->
+  <!-- ===================================== -->
+  <style>
+    .admin-layout{
+      display:flex;
+      gap:2rem;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .admin-form{
+      flex:1 1 55%;
+      min-width:280px;
+    }
+    .preview-column{
+      flex:1 1 35%;
+      min-width:260px;
+    }
+    .preview-title{
+      font-size:1rem;
+      margin-bottom:0.75rem;
+      color:var(--muted-color,#a7b0c0);
+    }
+    .preview-card{
+      max-width:380px;
+      margin:0 auto;
+    }
+    .preview-main{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:0.5rem;
+      margin-bottom:0.75rem;
+    }
+    .preview-image-wrapper{
+      flex:1 1 auto;
+      max-width:320px;
+      aspect-ratio:3/4;
+      overflow:hidden;
+      border-radius:1rem;
+      background:#101319;
+    }
+    .preview-image-wrapper img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .preview-arrow{
+      border:none;
+      border-radius:999px;
+      width:32px;
+      height:32px;
+      font-size:1.2rem;
+      line-height:32px;
+      padding:0;
+      background:#1f2430;
+      color:#fff;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .preview-body{
+      padding:0.75rem 0;
+    }
+    .preview-category{
+      font-size:0.8rem;
+      text-transform:uppercase;
+      letter-spacing:0.06em;
+      opacity:0.7;
+      margin-bottom:0.3rem;
+    }
+    .preview-name{
+      font-size:1.1rem;
+      margin:0 0 0.25rem;
+    }
+    .preview-price{
+      font-weight:600;
+      margin:0 0 0.5rem;
+    }
+    .preview-description{
+      font-size:0.9rem;
+      line-height:1.4;
+      opacity:0.85;
+      margin-bottom:0.75rem;
+    }
+    .btn-full{
+      width:100%;
+      justify-content:center;
+    }
+
+    /* thumbnails */
+    .images-current{
+      margin-top:1rem;
+    }
+    .images-current .subtitle{
+      font-weight:600;
+      margin-bottom:0.5rem;
+    }
+    .images-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:0.75rem;
+    }
+    .image-item{
+      width:110px;
+      text-align:center;
+      font-size:0.75rem;
+    }
+    .thumb-wrapper{
+      position:relative;
+      width:100%;
+      aspect-ratio:1/1;
+      border-radius:0.9rem;
+      overflow:hidden;
+      background:#101319;
+    }
+    .thumb-wrapper img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .delete-checkbox{
+      display:none;
+    }
+    .delete-btn{
+      position:absolute;
+      top:6px;
+      right:6px;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      border:none;
+      background:#ff4b5c;
+      color:#fff;
+      font-size:0.8rem;
+      line-height:22px;
+      padding:0;
+      cursor:pointer;
+      box-shadow:0 0 0 1px rgba(0,0,0,.4);
+      transition:transform .12s ease, background .12s ease;
+    }
+
+    @media (max-width: 900px){
+      .admin-layout{
+        flex-direction:column;
+      }
+      .preview-column{
+        order:-1;
+        margin-bottom:1.5rem;
+      }
+    }
+  </style>
+
+  <!-- ===================================== -->
+  <!--  JS: PREVIEW, SLIDER, X INSTANTÁNEA  -->
+  <!-- ===================================== -->
+  <script>
+    (function() {
+      // ---------- sincronizar texto con vista previa ----------
+      var inputName  = document.getElementById("name");
+      var inputPrice = document.getElementById("price");
+      var inputCat   = document.getElementById("category");
+      var inputDesc  = document.getElementById("description");
+
+      var prevName  = document.getElementById("preview-name");
+      var prevPrice = document.getElementById("preview-price");
+      var prevCat   = document.getElementById("preview-category");
+      var prevDesc  = document.getElementById("preview-description");
+
+      if (inputName && prevName) {
+        inputName.addEventListener("input", function() {
+          prevName.textContent = inputName.value || "Nombre del producto";
+        });
+      }
+
+      if (inputPrice && prevPrice) {
+        inputPrice.addEventListener("input", function() {
+          var v = (inputPrice.value || "").trim();
+          prevPrice.textContent = v ? v + " Bs" : "0.00 Bs";
+        });
+      }
+
+      if (inputCat && prevCat) {
+        function updateCategoryPreview() {
+          var text = "";
+          if (inputCat.selectedIndex >= 0) {
+            text = inputCat.options[inputCat.selectedIndex].text;
+          }
+          prevCat.textContent = text ? text.toUpperCase() : "CATEGORÍA";
+        }
+        inputCat.addEventListener("change", updateCategoryPreview);
+        updateCategoryPreview();
+      }
+
+      if (inputDesc && prevDesc) {
+        inputDesc.addEventListener("input", function() {
+          var v = (inputDesc.value || "").trim();
+          prevDesc.textContent = v || "Aquí se verá la descripción del producto.";
+        });
+      }
+
+      // ---------- slider de imágenes ----------
+      var mainImg  = document.getElementById("preview-main-img");
+      var btnPrev  = document.getElementById("preview-prev");
+      var btnNext  = document.getElementById("preview-next");
+      var fileInput = document.getElementById("images");
+      var currentImagesContainer = document.getElementById("current-images");
+
+      // Cargamos imágenes desde los thumbnails existentes
+      var previewImages = [];
+      var thumbNodes = document.querySelectorAll("[data-preview-image]");
+      for (var i = 0; i < thumbNodes.length; i++) {
+        var u = thumbNodes[i].getAttribute("data-preview-image");
+        if (u && previewImages.indexOf(u) === -1) {
+          previewImages.push(u);
+        }
+      }
+
+      // Si no hay lista pero sí hay src en la imagen principal, lo usamos
+      if (previewImages.length === 0 && mainImg && mainImg.src) {
+        previewImages.push(mainImg.src);
+      }
+
+      var previewIndex = 0;
+
+      function normalizeIndex() {
+        if (previewImages.length === 0) return;
+        if (previewIndex < 0) previewIndex = previewImages.length - 1;
+        if (previewIndex >= previewImages.length) previewIndex = 0;
+      }
+
+      function updatePreviewImage() {
+        if (!mainImg || previewImages.length === 0) return;
+        normalizeIndex();
+        mainImg.src = previewImages[previewIndex];
+      }
+
+      function refreshArrowsVisibility() {
+        if (!btnPrev || !btnNext) return;
+        var display = previewImages.length > 1 ? "flex" : "none";
+        btnPrev.style.display = display;
+        btnNext.style.display = display;
+      }
+
+      if (btnPrev && btnNext) {
+        btnPrev.addEventListener("click", function() {
+          if (previewImages.length === 0) return;
+          previewIndex--;
+          updatePreviewImage();
+        });
+
+        btnNext.addEventListener("click", function() {
+          if (previewImages.length === 0) return;
+          previewIndex++;
+          updatePreviewImage();
+        });
+      }
+
+      refreshArrowsVisibility();
+
+      // ---------- X de imágenes existentes (BD) ----------
+      var deleteButtons = document.querySelectorAll(".delete-btn[data-target-checkbox]");
+      Array.prototype.forEach.call(deleteButtons, function(btn) {
+        btn.addEventListener("click", function() {
+          var targetId = btn.getAttribute("data-target-checkbox");
+          var checkbox = document.getElementById(targetId);
+          var item = btn.closest(".image-item");
+          if (!checkbox || !item) return;
+
+          // marcamos para borrar en el backend
+          checkbox.checked = true;
+
+          // sacamos del slider
+          var url = item.getAttribute("data-preview-image");
+          if (url) {
+            var idx = previewImages.indexOf(url);
+            if (idx !== -1) {
+              previewImages.splice(idx, 1);
+              if (previewIndex >= previewImages.length) {
+                previewIndex = previewImages.length - 1;
+              }
+              updatePreviewImage();
+              refreshArrowsVisibility();
+            }
+          }
+
+          // la quitamos visualmente
+          item.style.display = "none";
+        });
+      });
+
+      // ---------- preview + thumbnail de nuevas imágenes ----------
+      if (fileInput && window.FileReader) {
+        fileInput.addEventListener("change", function() {
+          var files = Array.prototype.slice.call(fileInput.files || []);
+          if (files.length === 0) return;
+
+          files.forEach(function(file) {
+            if (!file.type || file.type.indexOf("image") !== 0) return;
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+              var dataUrl = ev.target.result;
+              if (!dataUrl) return;
+
+              // Añadimos al slider
+              previewImages.push(dataUrl);
+              previewIndex = previewImages.length - 1;
+              updatePreviewImage();
+              refreshArrowsVisibility();
+
+              // Añadimos miniatura en "Imágenes actuales"
+              if (currentImagesContainer) {
+                var item = document.createElement("div");
+                item.className = "image-item";
+                item.setAttribute("data-preview-image", dataUrl);
+
+                item.innerHTML =
+                  '<div class="thumb-wrapper">' +
+                    '<img src="' + dataUrl + '" alt="Imagen nueva">' +
+                    '<button type="button" class="delete-btn" aria-label="Quitar imagen nueva">✕</button>' +
+                  '</div>';
+
+                currentImagesContainer.appendChild(item);
+
+                var btn = item.querySelector(".delete-btn");
+                btn.addEventListener("click", function() {
+                  // Sacar del slider
+                  var url = item.getAttribute("data-preview-image");
+                  if (url) {
+                    var idx = previewImages.indexOf(url);
+                    if (idx !== -1) {
+                      previewImages.splice(idx, 1);
+                      if (previewIndex >= previewImages.length) {
+                        previewIndex = previewImages.length - 1;
+                      }
+                      updatePreviewImage();
+                      refreshArrowsVisibility();
+                    }
+                  }
+                  // quitar miniatura
+                  item.remove();
+                });
+              }
+            };
+            reader.readAsDataURL(file);
+          });
+        });
+      }
+
+      // primera actualización
+      updatePreviewImage();
+    })();
+  </script>
+
+</section>
+
+{% endblock %}
