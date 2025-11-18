@@ -190,6 +190,14 @@
     min-width:260px;
   }
 
+  /* ========= Romper el “encuadre” de la card global ========= */
+  .product-gallery.card{
+    background:transparent;
+    padding:0;
+    border-radius:0;
+    box-shadow:none;
+  }
+
   /* ======= GALERÍA ======= */
   .gallery-inner{
     position:relative;
@@ -202,7 +210,7 @@
   .gallery-main{
     position:relative;
     width:100%;
-    padding-top:90%; /* desktop: destaque fuerte pero controlado */
+    padding-top:90%; /* desktop: protagonista pero controlada */
   }
 
   .gallery-slide{
@@ -330,7 +338,7 @@
     opacity:0.7;
   }
 
-  /* ======= RELACIONADOS (MENOS PROTAGONISTAS) ======= */
+  /* ======= RELACIONADOS (apoyo, no protagonistas) ======= */
   .related-section{
     margin-top:2.4rem;
     padding-top:1.6rem;
@@ -423,7 +431,7 @@
 
   @media (max-width: 768px){
     .gallery-main{
-      padding-top:75%; /* móvil: sigue protagonista pero no tapa todo */
+      padding-top:75%; /* móvil: protagonista pero sin comerse todo */
     }
     .product-title{
       font-size:1.5rem;
@@ -440,13 +448,22 @@
     .product-layout{
       gap:1.5rem;
     }
+
+    .product-gallery{
+      width:100%;
+      max-width:none;
+      margin:0;
+    }
+
+    .gallery-inner{
+      border-radius:1.2rem;
+      box-shadow:0 10px 26px rgba(0,0,0,0.45);
+    }
+
     .gallery-main{
       padding-top:70%;
     }
-    .product-gallery{
-      max-width:480px;
-      margin:0 auto;
-    }
+
     .related-grid{
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:0.75rem;
@@ -462,7 +479,7 @@
 
   @media (max-width: 420px){
     .gallery-main{
-      padding-top:65%; /* celulares chicos, imagen fuerte pero controlada */
+      padding-top:60%; /* cel chico: se ve bien grande pero no exagerada */
     }
     .related-grid{
       grid-template-columns:repeat(2,minmax(0,1fr)); /* nunca 1 sola columna */
