@@ -338,7 +338,7 @@
     opacity:0.7;
   }
 
-  /* ======= RELACIONADOS (apoyo, no protagonistas) ======= */
+  /* ======= RELACIONADOS ======= */
   .related-section{
     margin-top:2.4rem;
     padding-top:1.6rem;
@@ -431,7 +431,7 @@
 
   @media (max-width: 768px){
     .gallery-main{
-      padding-top:75%; /* móvil: protagonista pero sin comerse todo */
+      padding-top:85%; /* un poco más alto en tablet/móvil */
     }
     .product-title{
       font-size:1.5rem;
@@ -461,7 +461,7 @@
     }
 
     .gallery-main{
-      padding-top:70%;
+      padding-top:82%; /* más altura en celu */
     }
 
     .related-grid{
@@ -479,21 +479,22 @@
 
   @media (max-width: 420px){
     .gallery-main{
-      padding-top:60%; /* cel chico: se ve bien grande pero no exagerada */
+      padding-top:80%; /* celulares chicos, imagen llenita sin ser gigante */
     }
     .related-grid{
-      grid-template-columns:repeat(2,minmax(0,1fr)); /* nunca 1 sola columna */
+      grid-template-columns:repeat(2,minmax(0,1fr));
     }
   }
 </style>
 
-<!-- ======================= JS SLIDER ======================= -->
+<!-- ======================= JS SLIDER (click + swipe) ======================= -->
 <script>
   (function() {
     var slides  = Array.prototype.slice.call(document.querySelectorAll(".gallery-slide"));
     var dots    = Array.prototype.slice.call(document.querySelectorAll(".gallery-dot"));
     var btnPrev = document.getElementById("gallery-prev");
     var btnNext = document.getElementById("gallery-next");
+    var main    = document.getElementById("gallery-main");
 
     if (!slides.length) {
       if (btnPrev) btnPrev.style.display = "none";
@@ -534,6 +535,34 @@
         setActive(i);
       });
     });
+
+    // ===== Swipe en móvil =====
+    if (main) {
+      var startX = 0;
+      var endX   = 0;
+      var threshold = 40; // píxeles mínimos para considerar swipe
+
+      main.addEventListener("touchstart", function(e){
+        if (!e.touches || !e.touches.length) return;
+        startX = e.touches[0].clientX;
+      }, { passive: true });
+
+      main.addEventListener("touchend", function(e){
+        if (!e.changedTouches || !e.changedTouches.length) return;
+        endX = e.changedTouches[0].clientX;
+        var diff = endX - startX;
+
+        if (Math.abs(diff) > threshold){
+          if (diff < 0){
+            // swipe hacia la izquierda -> siguiente
+            setActive(index + 1);
+          } else {
+            // swipe hacia la derecha -> anterior
+            setActive(index - 1);
+          }
+        }
+      }, { passive: true });
+    }
 
     // Ocultar flechas si solo hay una imagen
     if (slides.length === 1) {
