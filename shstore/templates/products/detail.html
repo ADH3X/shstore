@@ -205,12 +205,14 @@
     border-radius:1.6rem;
     background:#101319;
     box-shadow:0 16px 40px rgba(0,0,0,0.55);
+    touch-action:pan-y; /* permitimos swipe horizontal sin pelear con zoom */
   }
 
   .gallery-main{
     position:relative;
     width:100%;
-    padding-top:90%; /* desktop: protagonista pero controlada */
+    padding-top:90%; /* desktop */
+    touch-action:pan-y;
   }
 
   .gallery-slide{
@@ -229,18 +231,19 @@
     pointer-events:auto;
   }
 
+  /* Flechas con área táctil grande */
   .gallery-arrow{
     position:absolute;
     top:50%;
     transform:translateY(-50%);
-    width:34px;
-    height:34px;
+    width:44px;          /* más grande para el dedo */
+    height:44px;
     border-radius:999px;
     border:none;
     background:#1f2430;
     color:#fff;
-    font-size:1.3rem;
-    line-height:34px;
+    font-size:1.4rem;
+    line-height:44px;
     padding:0;
     display:flex;
     align-items:center;
@@ -431,7 +434,7 @@
 
   @media (max-width: 768px){
     .gallery-main{
-      padding-top:85%; /* un poco más alto en tablet/móvil */
+      padding-top:85%;
     }
     .product-title{
       font-size:1.5rem;
@@ -461,7 +464,7 @@
     }
 
     .gallery-main{
-      padding-top:82%; /* más altura en celu */
+      padding-top:82%; /* altura buena en cel */
     }
 
     .related-grid{
@@ -479,7 +482,7 @@
 
   @media (max-width: 420px){
     .gallery-main{
-      padding-top:80%; /* celulares chicos, imagen llenita sin ser gigante */
+      padding-top:80%;
     }
     .related-grid{
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -487,7 +490,7 @@
   }
 </style>
 
-<!-- ======================= JS SLIDER (click + swipe) ======================= -->
+<!-- ======================= JS SLIDER (click + swipe mejorado) ======================= -->
 <script>
   (function() {
     var slides  = Array.prototype.slice.call(document.querySelectorAll(".gallery-slide"));
@@ -519,49 +522,64 @@
     }
 
     if (btnPrev) {
-      btnPrev.addEventListener("click", function(){
+      btnPrev.addEventListener("click", function(e){
+        e.preventDefault();
         setActive(index - 1);
       });
     }
     if (btnNext) {
-      btnNext.addEventListener("click", function(){
+      btnNext.addEventListener("click", function(e){
+        e.preventDefault();
         setActive(index + 1);
       });
     }
 
     dots.forEach(function(dot){
-      dot.addEventListener("click", function(){
+      dot.addEventListener("click", function(e){
+        e.preventDefault();
         var i = parseInt(dot.getAttribute("data-index"), 10) || 0;
         setActive(i);
       });
     });
 
-    // ===== Swipe en móvil =====
+    // ===== Swipe en móvil mejorado =====
     if (main) {
       var startX = 0;
-      var endX   = 0;
-      var threshold = 40; // píxeles mínimos para considerar swipe
+      var startY = 0;
+      var threshold = 25; // menos distancia -> swipe más sensible
 
       main.addEventListener("touchstart", function(e){
         if (!e.touches || !e.touches.length) return;
-        startX = e.touches[0].clientX;
-      }, { passive: true });
+        var t = e.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+      }, { passive:false });
 
       main.addEventListener("touchend", function(e){
         if (!e.changedTouches || !e.changedTouches.length) return;
-        endX = e.changedTouches[0].clientX;
-        var diff = endX - startX;
+        var t = e.changedTouches[0];
+        var endX = t.clientX;
+        var endY = t.clientY;
 
-        if (Math.abs(diff) > threshold){
-          if (diff < 0){
-            // swipe hacia la izquierda -> siguiente
+        var dx = endX - startX;
+        var dy = endY - startY;
+
+        // si el movimiento fue más vertical que horizontal, lo ignoramos
+        if (Math.abs(dy) > Math.abs(dx)) {
+          return;
+        }
+
+        if (Math.abs(dx) > threshold){
+          e.preventDefault();
+          if (dx < 0){
+            // izquierda -> siguiente
             setActive(index + 1);
           } else {
-            // swipe hacia la derecha -> anterior
+            // derecha -> anterior
             setActive(index - 1);
           }
         }
-      }, { passive: true });
+      }, { passive:false });
     }
 
     // Ocultar flechas si solo hay una imagen
