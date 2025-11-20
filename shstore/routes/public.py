@@ -25,6 +25,8 @@ CATEGORY_OPTIONS = [
     ("bolsos", "Bolsos / Mochilas"),
     ("outlet", "Outlet"),
     ("nuevos", "Nuevos ingresos"),
+    # nueva categoría especial
+    ("joyitas-cumavi", "Joyitas Cumavi"),
 ]
 
 
@@ -35,14 +37,19 @@ def home():
 
     query = Product.query
 
-    # ---- filtro por categoría ----
+    # ---- filtro por categoría / estado especial ----
     if category_slug:
-        cat = Category.query.filter_by(slug=category_slug).first()
-        if cat:
-            query = query.filter(Product.category_id == cat.id)
+        if category_slug == "joyitas-cumavi":
+            # Filtra por estado especial
+            query = query.filter(Product.condition == "Joyitas Cumavi")
         else:
-            # si el slug es inválido, que no devuelva nada
-            query = query.filter(False)
+            # Categorías normales usando la tabla Category
+            cat = Category.query.filter_by(slug=category_slug).first()
+            if cat:
+                query = query.filter(Product.category_id == cat.id)
+            else:
+                # slug inválido -> no devuelve nada
+                query = query.filter(False)
 
     # ---- filtro por búsqueda ----
     if q:
@@ -56,13 +63,19 @@ def home():
     if not products:
         fallback_query = Product.query
 
-        # si hay categoría seleccionada, intentamos recomendar de esa categoría
         if category_slug:
-            cat_for_rec = Category.query.filter_by(slug=category_slug).first()
-            if cat_for_rec:
+            if category_slug == "joyitas-cumavi":
+                # Si no hay joyitas, recomienda otras joyitas
                 fallback_query = fallback_query.filter(
-                    Product.category_id == cat_for_rec.id
+                    Product.condition == "Joyitas Cumavi"
                 )
+            else:
+                # recomendaciones dentro de la misma categoría normal
+                cat_for_rec = Category.query.filter_by(slug=category_slug).first()
+                if cat_for_rec:
+                    fallback_query = fallback_query.filter(
+                        Product.category_id == cat_for_rec.id
+                    )
 
         recommended_products = (
             fallback_query
@@ -79,7 +92,6 @@ def home():
         category_filter=category_slug,
         category_options=CATEGORY_OPTIONS,
     )
-
 
 
 @bp.route("/products/<slug>")

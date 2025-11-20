@@ -114,6 +114,11 @@
          class="cat-chip {% if current_cat == 'nuevos' %}active{% endif %}">
         Nuevos
       </a>
+      <a href="{{ url_for('public.home', category='joyitas-cumavi') }}"
+        class="cat-chip {% if current_cat == 'joyitas-cumavi' %}active{% endif %}">
+        Joyitas Cumavi
+      </a>
+
 
     </div>
   </nav>

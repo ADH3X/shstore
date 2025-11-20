@@ -36,11 +36,15 @@ CATEGORY_OPTIONS = [
     ("bolsos", "Bolsos / Mochilas"),
     ("outlet", "Outlet"),
     ("nuevos", "Nuevos ingresos"),
+    # NUEVA CATEGORÍA
+    ("joyitas-cumavi", "Joyitas Cumavi"),
+
 ]
 
 GENDER_OPTIONS = ["Hombre", "Mujer", "Unisex", "Niño", "Niña"]
 
 CONDITION_OPTIONS = [
+    "Joyitas Cumavi",
     "Nuevo",
     "Como nuevo",
     "Muy bueno",
