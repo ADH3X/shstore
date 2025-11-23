@@ -38,6 +38,8 @@ CATEGORY_OPTIONS = [
     ("nuevos", "Nuevos ingresos"),
     # NUEVA CATEGORÍA
     ("joyitas-cumavi", "Joyitas Cumavi"),
+    ("gorras", "Gorras"),
+
 
 ]
 

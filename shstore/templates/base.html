@@ -54,6 +54,11 @@
          class="cat-chip {% if current_cat == 'zapatillas' %}active{% endif %}">
         Zapatillas
       </a>
+      <a href="{{ url_for('public.home', category='gorras') }}"
+        class="cat-chip {% if current_cat == 'gorras' %}active{% endif %}">
+        Gorras
+      </a>
+
 
       <a href="{{ url_for('public.home', category='poleras') }}"
          class="cat-chip {% if current_cat == 'poleras' %}active{% endif %}">
