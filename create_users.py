@@ -1,27 +1,47 @@
 # create_users.py
-from app import app
-from shstore.models import db, User
+from shstore import create_app, db
+from shstore.models import User
 from werkzeug.security import generate_password_hash
 
 
-def create_user(username: str, raw_password: str, role: str = "admin"):
-    with app.app_context():
-        existing = User.query.filter_by(username=username).first()
-        if existing:
-            print(f"El usuario '{username}' ya existe, no se crea de nuevo.")
-            return
+def main():
+    app = create_app()
 
-        user = User(
-            username=username,
-            password=generate_password_hash(raw_password),
-            role=role,
-        )
-        db.session.add(user)
+    with app.app_context():
+        # 1) Borrar usuario "admin" viejo si existe
+        old_admin = User.query.filter_by(username="admin").first()
+        if old_admin:
+            print("Eliminando usuario 'admin' anterior...")
+            db.session.delete(old_admin)
+            db.session.commit()
+
+        # 2) Borrar versiones viejas de diego/adhex si las hubiera
+        for username in ("diego", "adhex"):
+            exists = User.query.filter_by(username=username).first()
+            if exists:
+                print(f"Eliminando usuario viejo '{username}'...")
+                db.session.delete(exists)
         db.session.commit()
-        print(f"Usuario '{username}' creado correctamente.")
+
+        # 3) Crear usuarios oficiales
+        diego = User(
+            username="diego",
+            password=generate_password_hash("Diego2025*"),
+            role="admin",
+        )
+        adhex = User(
+            username="adhex",
+            password=generate_password_hash("Adhex2025*"),
+            role="admin",
+        )
+
+        db.session.add_all([diego, adhex])
+        db.session.commit()
+
+        print("Usuarios creados correctamente:")
+        print(" - diego  /  Diego2025*  (role=admin)")
+        print(" - adhex  /  Adhex2025*  (role=admin)")
 
 
 if __name__ == "__main__":
-    # puedes cambiar las contraseñas si quieres
-    create_user("diego", "Diego2025!")
-    create_user("adhex", "Adhex2025!")
+    main()
