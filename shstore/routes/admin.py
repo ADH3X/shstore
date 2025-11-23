@@ -134,6 +134,7 @@ def get_or_create_category(slug: str) -> Category | None:
     return cat
 
 
+
 def allowed_file(filename: str) -> bool:
     if "." not in filename:
         return False

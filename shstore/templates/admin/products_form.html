@@ -59,8 +59,8 @@
               <select id="category" name="category" class="select-input">
                 <option value="">Sin categoría</option>
                 {% for value, label  in category_options  %}
-                  <option value="{{ value  }}"
-                    {% if product and product.category and product.category.slug  == value %}
+                  <option value="{{ value }}"
+                    {% if product and product.category and product.category.slug == value %}
                       selected
                     {% endif %}
                   >
@@ -204,7 +204,14 @@
                 <div class="images-grid" id="current-images">
                   {% if product and product.images %}
                     {% for img in product.images %}
-                      {% set img_url = url_for('static', filename=img.image_url) %}
+                      {# Resolver URL dependiendo de si es viejo (uploads/...) o nuevo (solo nombre) #}
+                      {% set raw = img.image_url %}
+                      {% if '/' in raw %}
+                        {% set img_url = url_for('static', filename=raw) %}
+                      {% else %}
+                        {% set img_url = url_for('files.uploaded_files', filename=raw) %}
+                      {% endif %}
+
                       <div class="image-item" data-preview-image="{{ img_url }}">
                         <div class="thumb-wrapper">
                           <img
@@ -267,6 +274,24 @@
       <h2 class="preview-title">Vista previa (como lo ve el cliente)</h2>
 
       <article class="preview-card">
+        {# ---- resolver imagen principal para la vista previa ---- #}
+        {% set main_raw = None %}
+        {% if product and product.image_url %}
+          {% set main_raw = product.image_url %}
+        {% elif product and product.images %}
+          {% set main_raw = product.images[0].image_url %}
+        {% endif %}
+
+        {% if main_raw %}
+          {% if '/' in main_raw %}
+            {% set main_img_url = url_for('static', filename=main_raw) %}
+          {% else %}
+            {% set main_img_url = url_for('files.uploaded_files', filename=main_raw) %}
+          {% endif %}
+        {% else %}
+          {% set main_img_url = 'https://via.placeholder.com/600x800?text=Sin+imagen' %}
+        {% endif %}
+
         <!-- Imagen principal con slider -->
         <div class="preview-main">
           <button type="button" class="preview-arrow left" id="preview-prev">‹</button>
@@ -274,13 +299,7 @@
           <div class="preview-image-wrapper">
             <img
               id="preview-main-img"
-              src="{% if product and product.image_url %}
-                     {{ url_for('static', filename=product.image_url) }}
-                   {% elif product and product.images %}
-                     {{ url_for('static', filename=product.images[0].image_url) }}
-                   {% else %}
-                     https://via.placeholder.com/600x800?text=Sin+imagen
-                   {% endif %}"
+              src="{{ main_img_url }}"
               alt="Imagen del producto"
             >
           </div>
@@ -680,3 +699,4 @@
 </section>
 
 {% endblock %}
+

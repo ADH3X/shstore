@@ -13,16 +13,32 @@
         <div class="gallery-main" id="gallery-main">
           {% if product.images %}
             {% for img in product.images %}
-              <img
-                class="gallery-slide {% if loop.first %}is-active{% endif %}"
-                src="{{ url_for('static', filename=img.image_url) }}"
-                alt="Imagen {{ loop.index }} de {{ product.name }}"
-              >
+              {% set path = img.image_url %}
+              {% if path %}
+                {% if '/' in path %}
+                  {# Viejo: "uploads/archivo.jpg" en static/uploads #}
+                  {% set img_url = url_for('static', filename=path) %}
+                {% else %}
+                  {# Nuevo: "archivo.jpg" en /var/data/uploads #}
+                  {% set img_url = url_for('files.uploaded_files', filename=path) %}
+                {% endif %}
+                <img
+                  class="gallery-slide {% if loop.first %}is-active{% endif %}"
+                  src="{{ img_url }}"
+                  alt="Imagen {{ loop.index }} de {{ product.name }}"
+                >
+              {% endif %}
             {% endfor %}
           {% elif product.image_url %}
+            {% set path = product.image_url %}
+            {% if '/' in path %}
+              {% set img_url = url_for('static', filename=path) %}
+            {% else %}
+              {% set img_url = url_for('files.uploaded_files', filename=path) %}
+            {% endif %}
             <img
               class="gallery-slide is-active"
-              src="{{ url_for('static', filename=product.image_url) }}"
+              src="{{ img_url }}"
               alt="{{ product.name }}"
             >
           {% else %}
@@ -147,10 +163,28 @@
         {% for p in related_products %}
           <a href="{{ url_for('public.product_detail', slug=p.slug) }}" class="related-card">
             <div class="related-thumb">
+              {% set thumb_url = None %}
+
               {% if p.image_url %}
-                <img src="{{ url_for('static', filename=p.image_url) }}" alt="{{ p.name }}">
+                {% set path = p.image_url %}
+                {% if '/' in path %}
+                  {% set thumb_url = url_for('static', filename=path) %}
+                {% else %}
+                  {% set thumb_url = url_for('files.uploaded_files', filename=path) %}
+                {% endif %}
               {% elif p.images %}
-                <img src="{{ url_for('static', filename=p.images[0].image_url) }}" alt="{{ p.name }}">
+                {% set path = p.images[0].image_url %}
+                {% if path %}
+                  {% if '/' in path %}
+                    {% set thumb_url = url_for('static', filename=path) %}
+                  {% else %}
+                    {% set thumb_url = url_for('files.uploaded_files', filename=path) %}
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+
+              {% if thumb_url %}
+                <img src="{{ thumb_url }}" alt="{{ p.name }}">
               {% else %}
                 <img src="https://via.placeholder.com/600x800?text=Sin+imagen" alt="{{ p.name }}">
               {% endif %}

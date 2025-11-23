@@ -191,19 +191,29 @@
       {% for product in products %}
         <article class="product-admin-card">
 
-          <!-- Vista similar a cliente -->
-          <div class="product-admin-main">
-            <a
-              href="{{ url_for('public.product_detail', slug=product.slug) }}"
-              class="product-admin-thumb"
-              target="_blank"
-            >
-              {% if product.image_url %}
-                <img src="{{ url_for('static', filename=product.image_url) }}" alt="{{ product.name }}">
+        <!-- Vista similar a cliente -->
+        <div class="product-admin-main">
+          <a
+            href="{{ url_for('public.product_detail', slug=product.slug) }}"
+            class="product-admin-thumb"
+            target="_blank"
+          >
+            {% set raw = product.image_url %}
+
+            {% if raw %}
+              {# Si tiene "/" es imagen vieja en /static/uploads #}
+              {% if "/" in raw %}
+                <img src="{{ url_for('static', filename=raw) }}" alt="{{ product.name }}">
               {% else %}
-                <img src="{{ url_for('static', filename='img/placeholder-product.png') }}" alt="Sin imagen">
+                {# Imagen nueva, cargada desde /uploads (persistente) #}
+                <img src="{{ url_for('files.uploaded_files', filename=raw) }}" alt="{{ product.name }}">
               {% endif %}
-            </a>
+            {% else %}
+              <img src="{{ url_for('static', filename='img/placeholder-product.png') }}" alt="Sin imagen">
+            {% endif %}
+          </a>
+
+
 
             <div class="product-admin-info">
               <h2 class="product-admin-name">{{ product.name }}</h2>

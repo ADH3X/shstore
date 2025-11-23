@@ -8,7 +8,6 @@
     <div class="home-header-main">
       <h1 class="home-title">
         {% if category_filter %}
-          {# nombre bonito de la categoría actual #}
           {% for slug, label in category_options %}
             {% if slug == category_filter %}
               {{ label }}
@@ -43,28 +42,33 @@
     </div>
   </header>
 
+
   <!-- ===================== GRID DE PRODUCTOS ===================== -->
   {% if products %}
     <section class="products-grid">
       {% for product in products %}
         <article class="product-card">
           <a href="{{ url_for('public.product_detail', slug=product.slug) }}" class="product-card-link">
+
             <div class="product-thumb">
+              {% set path = None %}
               {% if product.image_url %}
-                <img
-                  src="{{ url_for('static', filename=product.image_url) }}"
-                  alt="{{ product.name }}"
-                >
+                {% set path = product.image_url %}
               {% elif product.images %}
-                <img
-                  src="{{ url_for('static', filename=product.images[0].image_url) }}"
-                  alt="{{ product.name }}"
-                >
+                {% set path = product.images[0].image_url %}
+              {% endif %}
+
+              {% if path %}
+                {% if '/' in path %}
+                  {# Viejo: está en static/uploads #}
+                  {% set img_url = url_for('static', filename=path) %}
+                {% else %}
+                  {# Nuevo: está en /var/data/uploads #}
+                  {% set img_url = url_for('files.uploaded_files', filename=path) %}
+                {% endif %}
+                <img src="{{ img_url }}" alt="{{ product.name }}">
               {% else %}
-                <img
-                  src="https://via.placeholder.com/800x800?text=SH+STORE"
-                  alt="{{ product.name }}"
-                >
+                <img src="https://via.placeholder.com/800x800?text=SH+STORE" alt="{{ product.name }}">
               {% endif %}
             </div>
 
@@ -79,12 +83,12 @@
         </article>
       {% endfor %}
     </section>
+
   {% else %}
     <p class="empty-state">
       No hay productos para mostrar en esta combinación de filtros.
     </p>
 
-    {# ===================== RECOMENDADOS ===================== #}
     {% if recommended_products %}
       <section class="recommended-section">
         <div class="recommended-header">
@@ -95,25 +99,28 @@
         </div>
 
         <div class="products-grid products-grid--recommended">
+
           {% for product in recommended_products %}
             <article class="product-card">
               <a href="{{ url_for('public.product_detail', slug=product.slug) }}" class="product-card-link">
+
                 <div class="product-thumb">
+                  {% set path = None %}
                   {% if product.image_url %}
-                    <img
-                      src="{{ url_for('static', filename=product.image_url) }}"
-                      alt="{{ product.name }}"
-                    >
+                    {% set path = product.image_url %}
                   {% elif product.images %}
-                    <img
-                      src="{{ url_for('static', filename=product.images[0].image_url) }}"
-                      alt="{{ product.name }}"
-                    >
+                    {% set path = product.images[0].image_url %}
+                  {% endif %}
+
+                  {% if path %}
+                    {% if '/' in path %}
+                      {% set img_url = url_for('static', filename=path) %}
+                    {% else %}
+                      {% set img_url = url_for('files.uploaded_files', filename=path) %}
+                    {% endif %}
+                    <img src="{{ img_url }}" alt="{{ product.name }}">
                   {% else %}
-                    <img
-                      src="https://via.placeholder.com/800x800?text=SH+STORE"
-                      alt="{{ product.name }}"
-                    >
+                    <img src="https://via.placeholder.com/800x800?text=SH+STORE" alt="{{ product.name }}">
                   {% endif %}
                 </div>
 
@@ -124,6 +131,7 @@
                   <h2 class="product-name">{{ product.name }}</h2>
                   <p class="product-price">{{ '%.2f'|format(product.price) }} Bs</p>
                 </div>
+
               </a>
             </article>
           {% endfor %}
@@ -134,11 +142,10 @@
 
 </section>
 
-<!-- ===================== ESTILOS LOCALES ===================== -->
+
+<!-- ===================== ESTILOS ===================== -->
 <style>
-  .home-page{
-    padding-top:1.5rem;
-  }
+  .home-page{ padding-top:1.5rem; }
   .home-header{
     display:flex;
     justify-content:space-between;
@@ -146,22 +153,15 @@
     gap:1rem;
     margin-bottom:1.5rem;
   }
-  .home-title{
-    font-size:1.8rem;
-    margin:0;
-  }
-  .home-subtitle{
-    margin:0.3rem 0 0;
-    font-size:0.9rem;
-    opacity:0.8;
-  }
+  .home-title{ font-size:1.8rem; margin:0; }
+  .home-subtitle{ margin:0.3rem 0 0; font-size:0.9rem; opacity:0.8; }
 
-  /* ---------- grid de productos ---------- */
   .products-grid{
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
     gap:1.5rem;
   }
+
   .product-card{
     background:#10141d;
     border-radius:1.2rem;
@@ -173,16 +173,10 @@
     transform:translateY(-4px);
     box-shadow:0 14px 32px rgba(0,0,0,0.5);
   }
-  .product-card-link{
-    display:flex;
-    flex-direction:column;
-    height:100%;
-    text-decoration:none;
-    color:inherit;
-  }
+
   .product-thumb{
     position:relative;
-    padding-top:125%; /* 4:5 */
+    padding-top:125%;
     overflow:hidden;
     background:#05070b;
   }
@@ -197,9 +191,8 @@
   .product-card:hover .product-thumb img{
     transform:scale(1.03);
   }
-  .product-info{
-    padding:0.75rem 0.9rem 0.95rem;
-  }
+
+  .product-info{ padding:0.75rem 0.9rem 0.95rem; }
   .product-tag{
     margin:0 0 0.15rem;
     font-size:0.7rem;
@@ -207,77 +200,31 @@
     text-transform:uppercase;
     opacity:0.7;
   }
-  .product-name{
-    font-size:0.95rem;
-    margin:0 0 0.25rem;
-  }
-  .product-price{
-    margin:0;
-    font-weight:600;
-    font-size:0.95rem;
-  }
+  .product-name{ font-size:0.95rem; margin:0 0 0.25rem; }
+  .product-price{ margin:0; font-weight:600; font-size:0.95rem; }
 
-  .empty-state{
-    margin-top:1.5rem;
-    opacity:0.8;
-  }
-
-  /* ---------- recomendados ---------- */
-  .recommended-section{
-    margin-top:2.5rem;
-    border-top:1px solid rgba(255,255,255,0.05);
-    padding-top:1.7rem;
-  }
-  .recommended-header{
-    display:flex;
-    flex-direction:column;
-    gap:0.25rem;
-    margin-bottom:1.1rem;
-  }
-  .recommended-title{
-    margin:0;
-    font-size:1.3rem;
-  }
-  .recommended-subtitle{
-    margin:0;
-    font-size:0.9rem;
-    opacity:0.7;
-  }
-  .products-grid--recommended{
-    margin-top:0.5rem;
-  }
-
-  /* ---------- responsive ---------- */
   @media (max-width: 1200px){
-    .products-grid{
-      grid-template-columns:repeat(3,minmax(0,1fr));
-    }
+    .products-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
   }
-
   @media (max-width: 900px){
     .products-grid{
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:1.25rem;
-      padding:0 1rem;           /* margen lateral tablet/móvil */
+      padding:0 1rem;
     }
-    .home-title{
-      font-size:1.6rem;
-    }
+    .home-title{ font-size:1.6rem; }
   }
-
   @media (max-width: 600px){
     .products-grid{
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:1rem;
-      padding:0 0.9rem;         /* margen lateral extra en celulares */
+      padding:0 0.9rem;
     }
     .home-header{
       flex-direction:column;
       align-items:flex-start;
     }
-    .home-title{
-      font-size:1.45rem;
-    }
+    .home-title{ font-size:1.45rem; }
   }
 </style>
 
