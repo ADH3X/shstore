@@ -18,14 +18,12 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = SQLALCHEMY_TRACK_MODIFICATIONS
 
     # ================================
-    #  CONFIGURAR CARPETA PERSISTENTE
-    #  PARA GUARDAR IMÁGENES
+    #  CARPETA DE IMÁGENES (static/uploads)
     # ================================
-    PERSISTENT_UPLOAD_DIR = "/var/data/uploads"
-    os.makedirs(PERSISTENT_UPLOAD_DIR, exist_ok=True)
+    upload_dir = os.path.join(app.static_folder, "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
 
-    # Flask usará este folder
-    app.config["UPLOAD_FOLDER"] = PERSISTENT_UPLOAD_DIR
+    app.config["UPLOAD_FOLDER"] = upload_dir
     app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024  # 4MB máx por imagen
 
     # ================================
@@ -43,12 +41,12 @@ def create_app():
     from .routes.auth import bp as auth_bp
     from .routes.admin import bp as admin_bp
     from .routes.cart import bp as cart_bp
-    from .routes.files import bp as files_bp   # <--- NUEVO Y NECESARIO
+    from .routes.files import bp as files_bp   # si quieres eliminarlo luego, se puede
 
     app.register_blueprint(public_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(cart_bp)
-    app.register_blueprint(files_bp)           # <--- REGISTRA RUTA /uploads/
+    app.register_blueprint(files_bp)  # sirve si deseas servir imágenes fuera de /static
 
     return app
