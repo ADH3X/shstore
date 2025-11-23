@@ -14,6 +14,8 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
+from config import UPLOAD_FOLDER  # ⬅️ NUEVO
+
 from shstore.models import db, Product, Category, ProductImage
 from shstore.utils.security import login_required, admin_required
 
@@ -36,11 +38,8 @@ CATEGORY_OPTIONS = [
     ("bolsos", "Bolsos / Mochilas"),
     ("outlet", "Outlet"),
     ("nuevos", "Nuevos ingresos"),
-    # NUEVA CATEGORÍA
     ("joyitas-cumavi", "Joyitas Cumavi"),
     ("gorras", "Gorras"),
-
-
 ]
 
 GENDER_OPTIONS = ["Hombre", "Mujer", "Unisex", "Niño", "Niña"]
@@ -109,6 +108,7 @@ def make_category_slug(name: str) -> str:
 
     return slug
 
+
 def get_or_create_category(slug: str) -> Category | None:
     """
     Recibe el slug que viene del <select> (zapatillas, camperas-abrigos, etc.)
@@ -143,8 +143,9 @@ def allowed_file(filename: str) -> bool:
 
 def save_image_file(file_storage):
     """
-    Guarda la imagen en static/uploads y devuelve la ruta relativa
-    (por ejemplo: 'uploads/campera-123456.png') o None si algo falla.
+    Guarda la imagen en la carpeta de uploads (local o disco persistente)
+    y devuelve la ruta relativa (ej: 'uploads/campera-123456.png')
+    o None si algo falla.
     """
     if not file_storage or file_storage.filename == "":
         return None
@@ -157,13 +158,14 @@ def save_image_file(file_storage):
     base_name = filename.rsplit(".", 1)[0]
     final_name = f"{base_name}-{int(time.time())}.{ext}"
 
-    upload_folder = os.path.join(current_app.root_path, "static", "uploads")
+    # Usa UPLOAD_FOLDER de config; si en app.config hay uno, tiene prioridad
+    upload_folder = current_app.config.get("UPLOAD_FOLDER", UPLOAD_FOLDER)
     os.makedirs(upload_folder, exist_ok=True)
 
     save_path = os.path.join(upload_folder, final_name)
     file_storage.save(save_path)
 
-    # Lo que guardamos en la BD para usar con url_for('static', filename=...)
+    # Lo que guardamos en la BD
     return f"uploads/{final_name}"
 
 
@@ -301,8 +303,6 @@ def product_create():
         material_options=MATERIAL_OPTIONS,
         category_options=CATEGORY_OPTIONS,
     )
-
-
 
 
 @bp.route("/products/<int:product_id>/edit", methods=["GET", "POST"])
@@ -468,9 +468,6 @@ def product_edit(product_id):
         material_options=MATERIAL_OPTIONS,
         category_options=CATEGORY_OPTIONS,
     )
-
-
-
 
 
 @bp.route("/products/<int:product_id>/delete", methods=["POST"])
